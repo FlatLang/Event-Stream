@@ -1,0 +1,90 @@
+package flat/eventstream
+
+import flat/datastruct/HashMap
+import flat/log/Logger
+
+class {
+  static Logger log = Logger(EventStream.class)
+
+  HashMap<String, Array<action(Object, EventStream)>> eventListeners = HashMap()
+  HashMap<String, Array<Object>> eventBacklog = HashMap()
+
+  visible Bool backlogEvents = true
+  visible var Bool closed = false
+
+  public construct(
+    visible Bool backlogMissedEvents = false
+  ) {}
+
+  public emit<DataType>(String eventType, DataType data = null) => this {
+    if (closed) return this
+
+    if (backlogEvents) {
+      eventBacklog.getOrDefault(eventType, { Array() }).add(data)
+    }
+
+    if (let listeners = eventListeners.get(eventType)) {
+      listeners.forEach({ _(data, this) })
+    }
+  }
+
+  public on<DataType>(String eventType, action(DataType, EventStream)) => this {
+    if (closed) return this
+
+    eventListeners.getOrDefault(eventType, { Array() }).add(action)
+
+    if (backlogMissedEvents) {
+      eventBacklog.get(eventType)?.forEach({ action(_, this) })
+    }
+  }
+
+  public close() {
+    closed = true
+  }
+
+  public async waitFor<DataType>(String eventType) -> DataType {
+    external {
+      let resolve;
+      let reject;
+
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+    }
+
+    if (let event = eventBacklog.get(eventType)?.last) {
+      external {
+        resolve(#{event});
+      }
+    } else if (closed) {
+      external {
+        resolve(#{null});
+      }
+    }
+
+    on(eventType, (data) => {
+      external {
+        resolve(#{data});
+      }
+    })
+
+    external {
+      return promise;
+    }
+  }
+
+  public async consumeAll<DataType>(String eventType, String closeEvent = "close") -> DataType[] {
+    if (closed) return DataType[]
+
+    let results = Array<DataType>()
+
+    on(eventType, (data) => {
+      results.add(data)
+    })
+
+    waitFor(closeEvent)
+
+    return results
+  }
+}
