@@ -28,7 +28,7 @@ class {
     }
   }
 
-  public on<DataType>(String eventType, action(DataType, EventStream)) => this {
+  public on<DataType>(String eventType, action(DataType data, EventStream stream)) => this {
     if (closed) return this
 
     eventListeners.getOrDefault(eventType, { Array() }).add(action)
