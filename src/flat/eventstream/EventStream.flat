@@ -63,9 +63,9 @@ class {
       }
     }
 
-    on(eventType, (data) => {
+    on(eventType, {
       external {
-        resolve(#{data});
+        resolve(#{_data});
       }
     })
 
@@ -79,8 +79,8 @@ class {
 
     let results = Array<DataType>()
 
-    on(eventType, (data) => {
-      results.add(data)
+    on(eventType, {
+      results.add(_data)
     })
 
     waitFor(closeEvent)
