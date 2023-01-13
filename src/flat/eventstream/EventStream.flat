@@ -16,7 +16,7 @@ class {
     visible Bool backlogMissedEvents = false
   ) {}
 
-  public emit<DataType>(String eventType, DataType data = null) => this {
+  public emit<DataType>(String eventType, DataType data = null) => data {
     if (closed) return this
 
     if (backlogEvents) {
