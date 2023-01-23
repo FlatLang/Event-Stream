@@ -42,38 +42,6 @@ class {
     closed = true
   }
 
-  public async waitFor<DataType>(String eventType) -> DataType {
-    external {
-      let resolve;
-      let reject;
-
-      const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
-    }
-
-    if (let event = eventBacklog.get(eventType)?.last) {
-      external {
-        resolve(#{event});
-      }
-    } else if (closed) {
-      external {
-        resolve(#{null});
-      }
-    }
-
-    on(eventType, {
-      external {
-        resolve(#{_data});
-      }
-    })
-
-    external {
-      return promise;
-    }
-  }
-
   public async consumeAll<DataType>(String eventType, String closeEvent = "close") -> DataType[] {
     if (closed) return DataType[]
 
