@@ -17,7 +17,7 @@ class {
   ) {}
 
   public emit<DataType>(String eventType, DataType data = null) => data {
-    if (closed) return this
+    if (closed) return null
 
     if (backlogEvents) {
       eventBacklog.getOrDefault(eventType, { Array() }).add(data)
