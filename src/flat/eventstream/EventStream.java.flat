@@ -1,7 +1,0 @@
-package flat/eventstream
-
-class {
-  public async waitFor<DataType>(String eventType) -> DataType => null {
-
-  }
-}

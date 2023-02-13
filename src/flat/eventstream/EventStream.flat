@@ -1,13 +1,16 @@
 package flat/eventstream
 
-import flat/datastruct/HashMap
-import flat/log/Logger
+import flat/datastruct
+import flat/log
+import flat/future
 
 class {
   static Logger log = Logger(EventStream.class)
 
   HashMap<String, Array<action(Object, EventStream)>> eventListeners = HashMap()
   HashMap<String, Array<Object>> eventBacklog = HashMap()
+
+  Future[] pendingFutures = Future[]
 
   visible Bool backlogEvents = true
   visible var Bool closed = false
@@ -39,6 +42,7 @@ class {
   }
 
   public close() {
+    pendingFutures.forEach({ _.cancel() })
     closed = true
   }
 
@@ -54,5 +58,30 @@ class {
     waitFor(closeEvent)
 
     return results
+  }
+
+  public waitFor<DataType>(String eventType) -> Future<DataType> {
+    var Future future
+
+    future = Future.fromResolve<DataType>({
+      if (let event = eventBacklog.get(eventType)?.last) {
+        pendingFutures.remove(future)
+        _resolve(event)
+      } else if (closed) {
+        pendingFutures.remove(future)
+        _resolve(null)
+      } else {
+        on<DataType>(eventType, {
+          pendingFutures.remove(future)
+          _resolve(_data)
+        })
+      }
+    })
+
+    if (!future.completed) {
+      pendingFutures.add(future)
+    }
+
+    return future
   }
 }

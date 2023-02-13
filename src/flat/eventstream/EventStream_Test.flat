@@ -54,4 +54,31 @@ testable class {
     expect(testTriggered).toBe(true)
     expect(testyTriggered).toBe(false)
   }
+
+  async test `can waitFor an event type`() {
+    let stream = EventStream()
+    stream.emit("test", "hey")
+
+    expect(stream.waitFor("test")).toBe("hey")
+  }
+
+  async test `can cancel a waitFor of an event type`() {
+    let stream = EventStream()
+
+    let future = stream.waitFor("test")$
+
+    expect(future.completed).toBe(false)
+
+    future.cancel()
+  }
+
+  async test `does cancel the waitFor future if the stream is closed`() {
+    let stream = EventStream()
+
+    let future = stream.waitFor("test")$
+
+    stream.close()
+
+    expect(future.completed).toBe(true)
+  }
 }
