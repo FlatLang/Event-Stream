@@ -34,10 +34,12 @@ class {
   public on<DataType>(String eventType, action(DataType data, EventStream stream)) => this {
     if (closed) return this
 
-    eventListeners.getOrDefault(eventType, { Array() }).add(action)
+    let a(Object data, EventStream stream) = action
+
+    eventListeners.getOrDefault(eventType, { Array() }).add(a)
 
     if (backlogMissedEvents) {
-      eventBacklog.get(eventType)?.forEach({ action(_, this) })
+      eventBacklog.get(eventType)?.forEach({ a(_, this) })
     }
   }
 
@@ -51,7 +53,7 @@ class {
 
     let results = Array<DataType>()
 
-    on(eventType, {
+    on<DataType>(eventType, {
       results.add(_data)
     })
 
