@@ -63,25 +63,23 @@ class {
   }
 
   public waitFor<DataType>(String eventType) -> Future<DataType> {
-    var Future future
-
-    future = Future.fromResolve<DataType>({
+    Future<DataType> future = Future.fromResolve<DataType>({
       if (let event = eventBacklog.get(eventType)?.last) {
-        pendingFutures.remove(future)
+        pendingFutures.remove((Future)future)
         _resolve(event)
       } else if (closed) {
-        pendingFutures.remove(future)
+        pendingFutures.remove((Future)future)
         _resolve(null)
       } else {
         on<DataType>(eventType, {
-          pendingFutures.remove(future)
+          pendingFutures.remove((Future)future)
           _resolve(_data)
         })
       }
     })
 
     if (!future.completed) {
-      pendingFutures.add(future)
+      pendingFutures.add((Future)future)
     }
 
     return future
